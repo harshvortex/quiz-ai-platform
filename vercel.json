@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" }
+  ],
+  "framework": "vite",
+  "installCommand": "npm install",
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist"
+}

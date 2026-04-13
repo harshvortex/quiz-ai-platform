@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+instance/
+.pytest_cache/
+quiz.db
+
+# Node
+client/node_modules/
+client/dist/
+.eslintcache
+*.local
+
+# OS
+.DS_Store
+Thumbs.db

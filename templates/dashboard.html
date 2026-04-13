@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+
+  <!-- Hero Header -->
+  <div class="dash-header" data-animate>
+    <div class="dash-header-inner">
+      <div class="dash-welcome">
+        <p class="dash-greeting">Good {{ 'morning' if now.hour < 12 else 'afternoon' if now.hour < 18 else 'evening' }},</p>
+        <h1 class="dash-name">{{ current_user.username }} <span class="badge-pro">PRO</span> <span class="wave">👋</span></h1>
+        <p class="dash-sub">Ready to challenge yourself today?</p>
+      </div>
+      <div class="dash-actions">
+        <a href="{{ url_for('quiz') }}" class="btn-primary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Generate New Quiz
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card" data-animate>
+      <div class="stat-icon">📚</div>
+      <div class="stat-body">
+        <div class="stat-value" data-count="{{ stats.total }}">{{ stats.total }}</div>
+        <div class="stat-label">Quizzes Taken</div>
+      </div>
+      <div class="stat-bg-text">TOTAL</div>
+    </div>
+
+    <div class="stat-card" data-animate>
+      <div class="stat-icon">📊</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.average }}<span class="stat-unit">%</span></div>
+        <div class="stat-label">Average Score</div>
+      </div>
+      <div class="stat-bg-text">AVG</div>
+    </div>
+
+    <div class="stat-card" data-animate>
+      <div class="stat-icon">🏆</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.best }}<span class="stat-unit">%</span></div>
+        <div class="stat-label">Best Score</div>
+      </div>
+      <div class="stat-bg-text">BEST</div>
+    </div>
+
+    <div class="stat-card stat-streak" data-animate>
+      <div class="stat-icon">🔥</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.total // 5 + 1 }}</div>
+        <div class="stat-label">Daily Streak</div>
+      </div>
+      <div class="stat-bg-text">FIRE</div>
+    </div>
+  </div>
+
+  <!-- Performance Chart -->
+  <div class="chart-section" data-animate>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="section-title">Performance Journey</h2>
+        <div class="chart-legend">
+          <span class="legend-item"><span class="dot" style="background: #8b5cf6;"></span> Score %</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="performanceChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommended for Mastery -->
+  <div class="quick-start-section" data-animate>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <h2 class="section-title" style="margin-bottom: 0;">{% if recommendations %}Focus on Mastery{% else %}Quick Start{% endif %}</h2>
+      {% if recommendations %}<span class="badge-pro" style="margin-left: 0; font-size: 10px;">Personalized for You</span>{% endif %}
+    </div>
+    
+    <div class="topic-pills">
+      {% if recommendations %}
+        {% for topic in recommendations %}
+          <div class="topic-pill recommend-pill" onclick="startQuiz('{{ topic }}')">
+            <span class="pill-icon">🔥</span> {{ topic }} (Review)
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="topic-pill" onclick="startQuiz('General Science')">General Science</div>
+        <div class="topic-pill" onclick="startQuiz('World History')">World History</div>
+        <div class="topic-pill" onclick="startQuiz('JavaScript')">JavaScript</div>
+        <div class="topic-pill" onclick="startQuiz('Geography')">Geography</div>
+        <div class="topic-pill" onclick="startQuiz('Space Exploration')">Space Exploration</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="recent-section" data-animate>
+    <div class="section-header">
+      <h2 class="section-title">Recent Activity</h2>
+      {% if recent %}
+        <a href="{{ url_for('history') }}" class="section-link">View all →</a>
+      {% endif %}
+    </div>
+
+    {% if recent %}
+    <div class="recent-table-wrap">
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Topic</th>
+            <th>Difficulty</th>
+            <th>Score</th>
+            <th>Grade</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for quiz in recent %}
+          <tr class="table-row" data-animate>
+            <td class="topic-cell">
+              <span class="topic-dot"></span>
+              {{ quiz.topic }}
+            </td>
+            <td>
+              <span class="diff-badge diff-{{ quiz.difficulty }}">{{ quiz.difficulty.title() }}</span>
+            </td>
+            <td class="score-cell">
+              <span class="score-text">{{ quiz.score }}/{{ quiz.total_questions }}</span>
+              <div class="mini-bar">
+                <div class="mini-bar-fill" style="width: {{ quiz.percentage }}%; background: {% if quiz.percentage >= 70 %}var(--success){% elif quiz.percentage >= 50 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+              </div>
+            </td>
+            <td>
+              <span class="grade-badge grade-{{ quiz.grade.replace('+','plus') }}">{{ quiz.grade }}</span>
+            </td>
+            <td class="date-cell">{{ quiz.date.strftime('%b %d') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <h3>No quizzes yet</h3>
+      <p>Generate your first quiz to start tracking your progress.</p>
+      <a href="{{ url_for('quiz') }}" class="btn-primary">Start a Quiz</a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function startQuiz(topic) {
+    sessionStorage.setItem('prefill_topic', topic);
+    window.location.href = '{{ url_for("quiz") }}';
+  }
+
+  // Count-up animation for stats
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseFloat(el.dataset.count);
+    if (target === 0) return;
+    let start = 0;
+    const duration = 1500;
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.floor(eased * target);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+
+  // Performance Chart
+  const chartData = {{ chart_data | tojson | safe }};
+  const ctx = document.getElementById('performanceChart')?.getContext('2d');
+  
+  if (ctx && chartData.length > 0) {
+    // Create gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.15)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartData.map(q => q.topic.length > 12 ? q.topic.substring(0, 10) + '...' : q.topic),
+        datasets: [{
+          label: 'Score %',
+          data: chartData.map(q => q.percentage),
+          borderColor: '#8b5cf6',
+          backgroundColor: gradient,
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#f59e0b',
+          pointBorderColor: '#0a0a0f',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          pointHoverBackgroundColor: '#f59e0b',
+          pointHoverBorderColor: '#8b5cf6',
+          pointHoverBorderWidth: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(22, 22, 32, 0.95)',
+            titleColor: '#fff',
+            bodyColor: 'rgba(255,255,255,0.8)',
+            borderColor: 'rgba(139,92,246,0.3)',
+            borderWidth: 1,
+            cornerRadius: 12,
+            padding: 14,
+            titleFont: { size: 13, weight: '700' },
+            bodyFont: { size: 12 },
+            callbacks: {
+              label: (context) => ` Score: ${context.parsed.y}%`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: { font: { size: 11 }, color: 'rgba(255,255,255,0.3)' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 }, color: 'rgba(255,255,255,0.3)' }
+          }
+        }
+      }
+    });
+  }
+
+  // Fix greeting timezone
+  const hour = new Date().getHours();
+  const greeting = document.querySelector('.dash-greeting');
+  if (greeting) {
+    if (hour < 12) greeting.textContent = 'Good morning,';
+    else if (hour < 18) greeting.textContent = 'Good afternoon,';
+    else greeting.textContent = 'Good evening,';
+  }
+</script>
+{% endblock %}
